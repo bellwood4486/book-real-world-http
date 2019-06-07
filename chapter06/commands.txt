@@ -33,3 +33,15 @@ openssl req -new -nodes -sha256 -key server.key -out server.csr -config openssl.
 # 証明書を自分の秘密鍵で署名して作成
 openssl x509 -req -days 365 -in server.csr -sha256 -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile ./openssl.cnf -extensions Server
 
+######################
+# クライアント証明書
+######################
+
+# RSA 2048 ビットの秘密鍵を作成
+openssl genrsa -out client.key 2048
+
+# 証明書署名要求(CSR)を作成
+openssl req -new -nodes -sha256 -key client.key -out client.csr -config openssl.cnf
+
+# 証明書を自分の秘密鍵で署名して作成
+openssl x509 -req -days 365 -in client.csr -sha256 -out client.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile ./openssl.cnf -extensions Client

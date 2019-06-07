@@ -2,30 +2,22 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
 )
 
 func main() {
-	// 証明書を読み込む
-	cert, err := ioutil.ReadFile("./chapter06/ca.crt")
+	cert, err := tls.LoadX509KeyPair("./Chapter06/client.crt", "./Chapter06/client.key")
 	if err != nil {
 		panic(err)
 	}
-	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(cert)
-	tlsConfig := &tls.Config{
-		RootCAs: certPool,
-	}
-	tlsConfig.BuildNameToCertificate()
 
-	// クライアントを作成
 	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+			},
 		},
 	}
 
