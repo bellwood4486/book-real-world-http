@@ -8,8 +8,10 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var clientID = os.Getenv("GITHUB_CLIENT_ID")
@@ -80,6 +82,47 @@ func main() {
 		panic(err)
 	}
 	client := oauth2.NewClient(context.TODO(), conf.TokenSource(context.TODO(), token))
-	// ここで様々なこと行う
-	fmt.Println(client)
+
+	// Email 取得(11-3)
+	resp, err := client.Get("https://api.github.com/user/emails")
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	emails, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(emails))
+
+	// gistに投稿(11-4)
+	gist := `{
+      "description": "API example",
+      "public": true,
+      "files": {
+        "hello_from_rest_api.txt": {
+          "content": "Hello World"
+        }
+      }
+    }`
+	// 投稿
+	resp2, err := client.Post("https://api.github.com/gists", "application/json", strings.NewReader(gist))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(resp2.Status)
+	defer resp2.Body.Close()
+	// 結果をパースする
+	type GistResult struct {
+		Url string `json:"html_url"`
+	}
+	gistResult := &GistResult{}
+	err = json.NewDecoder(resp2.Body).Decode(gistResult)
+	if err != nil {
+		panic(err)
+	}
+	if gistResult.Url != "" {
+		// ブラウザで開く
+		_ = open.Start(gistResult.Url)
+	}
 }
